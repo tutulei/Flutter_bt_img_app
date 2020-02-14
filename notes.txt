@@ -1,0 +1,18 @@
+在没有科学上网的情况
+build.gradle中修改两处：
+
+//        google()
+//        jcenter()
+        maven{ url 'https://maven.aliyun.com/repository/google' }
+        maven{ url 'https://maven.aliyun.com/repository/jcenter' }
+        maven{url 'http://maven.aliyun.com/nexus/content/groups/public'}
+===============================================================================
+导入自制api方法：
+	将整个文件放入该项目根目录下，然后在pubspec.yaml中加入：
+	dependencies：
+		  flutter_bt_bluetooth（名字）:
+   			path: ./flutter_bt_bluetooth（地址，设置为根目录）
+===============================================================================
+Connect to 127.0.0.1:1080 [/127.0.0.1] failed: Connection refused: connect
+	找到本地（本地！！！）.gradle文件 将里面的gradle.properties中的代理代码注释
+===============================================================================
