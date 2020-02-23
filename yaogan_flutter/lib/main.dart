@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:control_pad/control_pad.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +9,7 @@ import 'package:flutter_bt_bluetooth/flutter_bt_bluetooth.dart';
 import 'carControl.dart';
 
 final key = GlobalKey<_TextState>();
-
+List<Widget> list;
 void main() {
 //  SystemChrome.setPreferredOrientations(
 //          [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight])
@@ -52,6 +53,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   BlueViewController _controller;
+  bool isConnected = false;
 
   @override
   Widget build(BuildContext context) {
@@ -61,18 +63,26 @@ class HomePageState extends State<HomePage> {
           children: <Widget>[
             Container(
               height: 300,
+              width: 500,
+              color: Colors.black12,
+              margin: EdgeInsets.only(left: 140, top: 20.0),
               child: BlueView(
-                onBlueViewCreated: (BlueViewController controller) =>
-                    setState(() => _controller = controller),
+                onBlueViewCreated: (c) => setState(() {
+                  if (c != null) {
+                    _controller = c;
+                    _controller.stateStream.listen((event) =>
+                        setState(() => isConnected = event == STATE_CONNECTED));
+                  }
+                }),
               ),
             ),
-//            _controller == null
-//                ? Container()
-//                : DeviceList(controller: _controller),
+            _controller == null
+                ? Container(color: Colors.red)
+                : Container(child: DeviceList(controller: _controller))
           ],
         ),
         Positioned(
-          left: 40,
+          left: 30,
           bottom: 0,
           child: Container(
             width: 220,
@@ -88,34 +98,9 @@ class HomePageState extends State<HomePage> {
           ),
         ),
         Positioned(
-            left: 10,
-            top: 10,
+            left: 5,
+            top: 1,
             child: Container(width: 200, child: new TextMsg(key: key))),
-        Positioned(
-          left: 50,
-          top: 50,
-          child: MaterialButton(
-            color: Colors.redAccent,
-            textColor: Colors.white,
-            child: new Text('选择设备'),
-            onPressed: () {
-              // ...
-              //点击后
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return SimpleDialog(title: Text('选择设备'), children: <Widget>[
-                    _controller == null
-                        ? Container(color: Colors.red)
-                        : Container(child: DeviceList(controller: _controller))
-                  ]);
-                },
-              ).then((val) {
-                print(val);
-              });
-            },
-          ),
-        ),
       ]),
     );
   }
@@ -126,10 +111,10 @@ class HomePageState extends State<HomePage> {
   ) {
     //发送数据
     String json = "";
-    carControl carcontrol = new carControl(0,(distance*100).toInt(), degrees.toInt(), 0, 0, 0);
+    carControl carcontrol =
+        new carControl(0, (distance * 100).toInt(), degrees.toInt(), 0, 0, 0);
     json = carcontrol.JsontoString();
-    _controller.sendMsg(json);//
-
+    _controller.sendMsg(json); //
 
     key.currentState.updateMessage(distance, degrees);
     print(json);
@@ -152,13 +137,13 @@ class _TextState extends State<TextMsg> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Text.rich(TextSpan(children: [
-        TextSpan(text: "角度: "),
+      child: Text.rich(TextSpan(style: TextStyle(fontSize: 10), children: [
+        TextSpan(text: "deg: "),
         TextSpan(
           text: this.degrees.toStringAsPrecision(6) + "   ",
           style: TextStyle(color: Colors.deepOrange),
         ),
-        TextSpan(text: "距离: "),
+        TextSpan(text: "dis: "),
         TextSpan(
           text: this.distance.toStringAsPrecision(4),
           style: TextStyle(color: Colors.deepOrange),
@@ -193,37 +178,56 @@ class _DeviceListState extends State<DeviceList> {
           .asyncMap((_) => widget.controller.bondedDevices),
       initialData: HashMap(),
       builder: (c, snapshot) {
-        List<Widget> list = List();
+        List<Widget> l = List();
         if (snapshot.data != null) {
           snapshot.data.forEach((key, value) {
-            list.add(Row(
-              children: <Widget>[
-                Text("$value"),
-                FlatButton(
-                  child: Text("连接"),
-                  onPressed: () async =>
-                      await widget.controller.connectBondedDevice(key),
-                ),
+            l.add(
+//                Row(
+//                  children: <Widget>[
+              Text("$value",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24.0)),
 //                FlatButton(
-//                  child: Text("发送"),
-//                  onPressed: () async {
-//                    await widget.controller.connectBondedDevice(key);
-//                    Navigator.of(context).push(
-//                      MaterialPageRoute(
-//                        builder: (c) => DeviceDataScreen(
-//                          device: key,
-//                          controller: widget.controller,
-//                        ),
-//                      ),
-//                    );
-//                  },
+//                  child: Text("连接"),
+//                  onPressed: () async =>
+//                      await widget.controller.connectBondedDevice(key),
 //                ),
-              ],
-            ));
+//              ],
+//            )
+            );
           });
         }
-        return Column(
-          children: list,
+        list = l;
+        return Container(
+          margin: EdgeInsets.only(left: 140, top: 5.0),
+          child: MaterialButton(
+            color: Colors.redAccent,
+            textColor: Colors.white,
+            child: new Text('选择设备'),
+            onPressed: () {
+              // ...
+              //点击后
+              showModalBottomSheet(
+                context: context,
+                builder: (BuildContext context) {
+                  return ListView.builder(
+                      padding: const EdgeInsets.all(14.0),
+                      itemCount: 1 + list.lastIndexOf(list.last),
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index == 0) {
+                          return Column(children: <Widget>[
+                            Text("请选择设备",
+                                style: TextStyle(
+                                    fontSize: 18.0, color: Colors.deepOrange))
+                          ]);
+                        }
+                        return Column(
+                            children: <Widget>[new Divider(), list[index]]);
+                      });
+                },
+              );
+            },
+          ),
         );
       },
     );
