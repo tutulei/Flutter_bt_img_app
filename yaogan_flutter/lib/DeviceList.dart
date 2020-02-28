@@ -55,9 +55,9 @@ class _DeviceListState extends State<DeviceList> {
       },
     );
   }
+
   Widget BT_bottom(widget, context) {
     return Container(
-
       child: MaterialButton(
         color: Colors.redAccent,
         textColor: Colors.white,
@@ -79,15 +79,17 @@ class _DeviceListState extends State<DeviceList> {
                                 fontSize: 18.0, color: Colors.deepOrange))
                       ]);
                     }
-                    return new InkWell(
-                      onTap: ()
-                      //处理点击事件
-                      async =>
-                      await widget.controller
-                          .connectBondedDevice(keylist[index]),
-                      child:
-                      Column(children: <Widget>[new Divider(), list[index]]),
-                    );
+                    return Column(children: <Widget>[
+                      new Divider(),
+                      new InkWell(
+                        onTap: ()
+                            //处理点击事件
+                            async =>
+                            await widget.controller
+                                .connectBondedDevice(keylist[index]),
+                        child:  Container(alignment: Alignment.center,child:list[index]),
+                      ),
+                    ]);
                   });
             },
           );

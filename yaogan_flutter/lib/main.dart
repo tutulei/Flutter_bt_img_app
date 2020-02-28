@@ -7,6 +7,7 @@ import 'package:flutter_bt_bluetooth/flutter_bt_bluetooth.dart';
 import 'carControl.dart';
 import 'DeviceList.dart';
 import 'JoystickData.dart';
+import 'addGesture_TapUp.dart';
 
 JoystickData j = new JoystickData();
 final key = j.KEY;
@@ -52,7 +53,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   BlueViewController _controller;
   bool isConnected = false;
-
+  int time2 = DateTime.parse("2020-01-01 00:00:00").millisecondsSinceEpoch;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,40 +89,80 @@ class HomePageState extends State<HomePage> {
             width: 220,
             height: 220,
 //                color: Colors.yellow,
-            child: JoystickView(
-                size: 170,
-                iconsColor: Colors.blue,
-                backgroundColor: Colors.grey,
-                opacity: 0.5,
-                innerCircleColor: Colors.white30,
-                onDirectionChanged: datePrint),
+
+            child: Listener(
+              child: JoystickView(
+                  size: 170,
+                  iconsColor: Colors.blue,
+                  backgroundColor: Colors.grey,
+                  opacity: 0.5,
+                  innerCircleColor: Colors.white30,
+                  onDirectionChanged: datePrint),
+              onPointerUp: (event) {
+                String json = "";
+                carControl carcontrol = new carControl(0, 0, 0, 0, 0, 0);
+                json = carcontrol.JsontoString();
+                _controller.sendMsg(json); //
+                print("摇杆指针弹起");
+              },
+            ),
           ),
         ),
         Positioned(
-          left: 530,
-          bottom: 50,
+          left: 500,
+          bottom: 40,
           child: Row(children: <Widget>[
-            IconButton(
-              iconSize: 80,
-              color: Colors.grey,
-              icon: new Icon(Icons.undo),
-              onPressed: () {
-                String json = "";
-                carControl carcontrol = new carControl(0, 60, 0, 0, 3000, 0);
-                json = carcontrol.JsontoString();
-                _controller.sendMsg(json); //
-              },
+            InkWell(
+              borderRadius: BorderRadius.circular(66.0),
+              onTap: () {},
+              child: Listener(
+                  child: Container(
+                      padding: EdgeInsets.all(18.0),
+                      child: new Icon(
+                        Icons.undo,
+                        color: Colors.grey,
+                        size: 80,
+                      )),
+                  onPointerUp: (event) {
+                    String json = "";
+                    carControl carcontrol = new carControl(0, 0, 0, 0, 0, 0);
+                    json = carcontrol.JsontoString();
+                    _controller.sendMsg(json); //
+                    print("左指针弹起");
+                  },
+                  onPointerDown: (event) {
+                    print("左指针按下");
+                    String json = "";
+                    carControl carcontrol = new carControl(0, 0, 0, 0, 3000, 0);
+                    json = carcontrol.JsontoString();
+                    _controller.sendMsg(json); //
+                  }),
             ),
-            IconButton(
-              iconSize: 80,
-              color: Colors.grey,
-              icon: new Icon(Icons.redo),
-              onPressed: () {
-                String json = "";
-                carControl carcontrol = new carControl(0, 60, 0, 1, 3000, 0);
-                json = carcontrol.JsontoString();
-                _controller.sendMsg(json); //
-              },
+            InkWell(
+              borderRadius: BorderRadius.circular(66.0),
+              onTap: () {},
+              child: Listener(
+                  child: Container(
+                      padding: EdgeInsets.all(18.0),
+                      child: new Icon(
+                        Icons.redo,
+                        color: Colors.grey,
+                        size: 80,
+                      )),
+                  onPointerUp: (event) {
+                    String json = "";
+                    carControl carcontrol = new carControl(0, 0, 0, 0, 0, 0);
+                    json = carcontrol.JsontoString();
+                    _controller.sendMsg(json); //
+                    print("右指针弹起");
+                  },
+                  onPointerDown: (event) {
+                    print("右指针按下");
+                    String json = "";
+                    carControl carcontrol = new carControl(0, 0, 0, 1, 3000, 0);
+                    json = carcontrol.JsontoString();
+                    _controller.sendMsg(json); //
+                  }),
             ),
           ]),
         ),
@@ -140,7 +181,13 @@ class HomePageState extends State<HomePage> {
     String json = "";
     carControl carcontrol = new carControl(0, dis, der, 0, 0, 0);
     json = carcontrol.JsontoString();
-    _controller.sendMsg(json); //
+    int time1 = DateTime.now().millisecondsSinceEpoch;
+//    print(time1);
+
+    if (time1 - time2 > 150) {
+      _controller.sendMsg(json); //
+      time2 = time1;
+    }
 
     key.currentState.updateMessage(dis, der);
     print(json);
